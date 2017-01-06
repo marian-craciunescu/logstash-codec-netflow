@@ -62,6 +62,40 @@ class VarSkip < BinData::Primitive
   end
 end
 
+class BasicList < BinData::Primitive
+  endian :big
+  uint8 :length_1
+  uint16 :length_2, :onlyif => lambda { length_1 == 255 }
+  skip :length => lambda { (length_1 == 255) ? length_2 : length_1 }
+
+  def get
+    ""
+  end
+end
+
+class SubTemplateList < BinData::Primitive
+  endian :big
+  uint8 :length_1
+  uint16 :length_2, :onlyif => lambda { length_1 == 255 }
+  skip :length => lambda { (length_1 == 255) ? length_2 : length_1 }
+
+  def get
+    ""
+  end
+end
+
+class SubTemplateMultiList < BinData::Primitive
+  endian :big
+  uint8 :length_1
+  uint16 :length_2, :onlyif => lambda { length_1 == 255 }
+  skip :length => lambda { (length_1 == 255) ? length_2 : length_1 }
+
+  def get
+    ""
+  end
+end
+
+
 class VarString < BinData::Primitive
   endian :big
   uint8 :length_1

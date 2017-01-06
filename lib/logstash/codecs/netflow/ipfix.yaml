@@ -783,11 +783,14 @@
   - :string
   - :encryptedTechnology
   291:
-  - :skip
+  - :basicList
+  - :basicList
   292:
-  - :skip
+  - :subTemplateList
+  - :subTemplateList
   293:
-  - :skip
+  - :subTemplateMultiList
+  - :subTemplateMultiList
   294:
   - :uint8
   - :bgpValidityState
@@ -1921,9 +1924,6 @@
   107:
   - :string
   - :osFingerPrint
-  107:
-  - :string
-  - :osFingerPrint
   126:
   - :string
   - :tftpFilename
@@ -2134,6 +2134,9 @@
   16491:
   - :string
   - :reverseOsFingerPrint
+  16671:
+  - :uint8
+  - :reverseRtpPayloadType
   16884:
   - :uint32
   - :reverseSmallPacketCount

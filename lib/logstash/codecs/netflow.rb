@@ -195,10 +195,12 @@ class LogStash::Codecs::Netflow < LogStash::Codecs::Base
         end
       end
     elsif header.version == 10
+     BinData::trace_reading do
       flowset = IpfixPDU.read(payload)
       flowset.records.each do |record|
         decode_ipfix(flowset, record).each { |event| yield(event) }
       end
+     end
     else
       @logger.warn("Unsupported Netflow version v#{header.version}")
     end

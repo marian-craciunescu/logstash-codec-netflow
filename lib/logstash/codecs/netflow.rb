@@ -51,7 +51,8 @@ class LogStash::Codecs::Netflow < LogStash::Codecs::Base
 
   def initialize(params = {})
     super(params)
-    @threadsafe = false
+    @threadsafe = true
+    @decode_mutex = Mutex.new
   end
 
   def register
@@ -212,17 +213,19 @@ class LogStash::Codecs::Netflow < LogStash::Codecs::Base
           else
             key = "#{flowset.source_id}|#{template.template_id}"
           end
-          @netflow_templates[key, @cache_ttl] = BinData::Struct.new(:endian => :big, :fields => fields)
-          @logger.debug("Received template #{template.template_id} with fields #{fields.inspect}")
-          @logger.debug("Received template #{template.template_id} of size #{template_length} bytes. Representing in #{@netflow_templates[key].num_bytes} BinData bytes")
-          if template_length != @netflow_templates[key].num_bytes
-            @logger.warn("Received template #{template.template_id} of size #{template_length} bytes doesn't match BinData representation we built (#{@netflow_templates[key].num_bytes} bytes)")
-          end
-          # Purge any expired templates
-          @netflow_templates.cleanup!
-          if @cache_save_path
-            @netflow_templates_cache[key] = fields
-            save_templates_cache(@netflow_templates_cache, "#{@cache_save_path}/netflow_templates.cache")
+          @decode_mutex.synchronize do
+            @netflow_templates[key, @cache_ttl] = BinData::Struct.new(:endian => :big, :fields => fields)
+            @logger.debug("Received template #{template.template_id} with fields #{fields.inspect}")
+            @logger.debug("Received template #{template.template_id} of size #{template_length} bytes. Representing in #{@netflow_templates[key].num_bytes} BinData bytes")
+            if template_length != @netflow_templates[key].num_bytes
+              @logger.warn("Received template #{template.template_id} of size #{template_length} bytes doesn't match BinData representation we built (#{@netflow_templates[key].num_bytes} bytes)")
+            end
+            # Purge any expired templates
+            @netflow_templates.cleanup!
+            if @cache_save_path
+              @netflow_templates_cache[key] = fields
+              save_templates_cache(@netflow_templates_cache, "#{@cache_save_path}/netflow_templates.cache")
+            end
           end
         end
       end
@@ -235,7 +238,7 @@ class LogStash::Codecs::Netflow < LogStash::Codecs::Base
       else
         key = "#{flowset.source_id}|#{record.flowset_id}"
       end
-      template = @netflow_templates[key]
+      template = @netflow_templates[key].new
 
       unless template
         @logger.warn("Can't (yet) decode flowset id #{record.flowset_id} from source id #{flowset.source_id}, because no template to decode it with has been received. This message will usually go away after 1 minute.")
